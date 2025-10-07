@@ -6,78 +6,48 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ArrowLeft, Calendar, TrendingUp, Eye } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useDispatch, useSelector } from "react-redux"
+import { fetchProducts } from "@/lib/productSlice"
+import type { RootState } from "@/lib/store"
 
 export default function AdoptionOrdersPage() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState("active")
+  const dispatch = useDispatch()
+  const [activeTab, setActiveTab] = useState("all")
+  const [selectedDuration, setSelectedDuration] = useState<number | undefined>(undefined)
 
-  const orders = [
-    {
-      id: "ADO001",
-      animalName: "ANGUS 0810 (Cái)",
-      image: "/black-angus-cow-in-green-field.jpg",
-      startDate: "2024-01-15",
-      endDate: "2024-12-15",
-      investment: 252000000,
-      currentReturn: 45360000,
-      totalReturn: 1088640000,
-      progress: 35.67,
-      status: "active",
-      weeksLeft: 46,
-    },
-    {
-      id: "ADO002",
-      animalName: "PHÚC LỢI QUỐC KHÁNH 2/9",
-      image: "/vietnamese-flag-celebration-package.jpg",
-      startDate: "2024-02-01",
-      endDate: "2024-07-01",
-      investment: 6660000,
-      currentReturn: 2664000,
-      totalReturn: 6660000,
-      progress: 40.0,
-      status: "active",
-      weeksLeft: 12,
-    },
-    {
-      id: "ADO003",
-      animalName: "ANGUS 0810 (Đực)",
-      image: "/black-angus-bull-in-pasture.jpg",
-      startDate: "2023-06-01",
-      endDate: "2023-12-01",
-      investment: 480000000,
-      currentReturn: 4608000000,
-      totalReturn: 4608000000,
-      progress: 100,
-      status: "completed",
-      weeksLeft: 0,
-    },
-  ]
+  const { products, isLoading, error } = useSelector((state: RootState) => state.products)
 
-  const filteredOrders = orders.filter((order) => {
-    if (activeTab === "active") return order.status === "active"
-    if (activeTab === "completed") return order.status === "completed"
+  useEffect(() => {
+    dispatch(fetchProducts({ adoption_duration: selectedDuration }) as any)
+  }, [dispatch, selectedDuration])
+
+  const filteredProducts = products.filter((product) => {
+    if (activeTab === "short") return product.adoption_duration <= 6
+    if (activeTab === "long") return product.adoption_duration > 6
     return true
   })
 
   return (
     <div className="min-h-screen relative overflow-hidden max-w-md mx-auto bg-white">
       <div className="relative z-10">
-        <StatusBar />
+        
 
         <div className="px-4 md:px-6 pb-24">
           <div className="flex items-center gap-4 mb-6 pt-4">
             <Button variant="ghost" size="sm" onClick={() => router.back()} className="text-white hover:bg-white/20">
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <h1 className="text-white text-xl font-bold">ĐƠN NHẬN NUÔI</h1>
+            <h1 className="text-white text-xl font-bold">SẢN PHẨM NUÔI</h1>
           </div>
 
           {/* Filter Tabs */}
           <div className="flex gap-2 mb-6">
             {[
-              { key: "active", label: "Đang nuôi" },
-              { key: "completed", label: "Hoàn thành" },
+              { key: "all", label: "Tất cả" },
+              { key: "short", label: "Ngắn hạn" },
+              { key: "long", label: "Dài hạn" },
             ].map((tab) => (
               <Button
                 key={tab.key}
@@ -92,90 +62,101 @@ export default function AdoptionOrdersPage() {
             ))}
           </div>
 
-          {/* Orders List */}
-          <div className="space-y-4">
-            {filteredOrders.map((order) => (
-              <Card key={order.id} className="bg-white/90 p-4 rounded-2xl">
-                <div className="flex gap-4">
-                  <img
-                    src={order.image || "/placeholder.svg"}
-                    alt={order.animalName}
-                    className="w-20 h-20 rounded-lg object-cover"
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-bold text-gray-900">{order.animalName}</h4>
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full ${
-                          order.status === "active" ? "bg-green-100 text-green-600" : "bg-blue-100 text-blue-600"
-                        }`}
-                      >
-                        {order.status === "active" ? "Đang nuôi" : "Hoàn thành"}
-                      </span>
-                    </div>
-
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-gray-400" />
-                        <span className="text-gray-600">
-                          {order.startDate} - {order.endDate}
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Đầu tư:</span>
-                        <span className="font-medium">{order.investment.toLocaleString()}đ</span>
-                      </div>
-
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Đã nhận:</span>
-                        <span className="font-medium text-green-600">{order.currentReturn.toLocaleString()}đ</span>
-                      </div>
-
-                      {order.status === "active" && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Còn lại:</span>
-                          <span className="font-medium text-blue-600">{order.weeksLeft} tuần</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Progress Bar */}
-                    <div className="mt-3">
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-gray-500">Tiến độ</span>
-                        <span className="text-gray-700">{order.progress}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-emerald-600 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${order.progress}%` }}
-                        ></div>
-                      </div>
-                    </div>
-
-                    <Button
-                      onClick={() => router.push(`/adoption-orders/${order.id}`)}
-                      variant="outline"
-                      size="sm"
-                      className="w-full mt-3 text-emerald-600 border-emerald-600 hover:bg-emerald-50"
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      Xem chi tiết
-                    </Button>
-                  </div>
-                </div>
-              </Card>
+          {/* Duration Filter */}
+          <div className="flex gap-2 mb-6">
+            <Button
+              onClick={() => setSelectedDuration(undefined)}
+              variant={selectedDuration === undefined ? "default" : "outline"}
+              className={`text-sm ${
+                selectedDuration === undefined ? "bg-blue-600 text-white" : "bg-white text-blue-600 border-blue-600"
+              }`}
+            >
+              Tất cả
+            </Button>
+            {[4, 6, 8, 12].map((duration) => (
+              <Button
+                key={duration}
+                onClick={() => setSelectedDuration(duration)}
+                variant={selectedDuration === duration ? "default" : "outline"}
+                className={`text-sm ${
+                  selectedDuration === duration ? "bg-blue-600 text-white" : "bg-white text-blue-600 border-blue-600"
+                }`}
+              >
+                {duration} tháng
+              </Button>
             ))}
           </div>
 
-          {filteredOrders.length === 0 && (
+          {/* Products List */}
+          <div className="space-y-4">
+            {isLoading ? (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <TrendingUp className="w-8 h-8 text-gray-400 animate-spin" />
+                </div>
+                <p className="text-gray-500">Đang tải sản phẩm...</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <TrendingUp className="w-8 h-8 text-red-400" />
+                </div>
+                <p className="text-red-500">{error}</p>
+              </div>
+            ) : (
+              filteredProducts.map((product) => (
+                <Card key={product.id} className="bg-white/90 p-4 rounded-2xl">
+                  <div className="flex gap-4">
+                    <img
+                      src={product.animal_image || "/placeholder.svg"}
+                      alt={product.name}
+                      className="w-20 h-20 rounded-lg object-cover"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="font-bold text-gray-900">{product.name}</h4>
+                        <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-600">
+                          {product.adoption_duration} tháng
+                        </span>
+                      </div>
+
+                      <div className="space-y-2 text-sm">
+                        <p className="text-gray-600 text-xs">{product.description}</p>
+
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Thu nhập dự kiến:</span>
+                          <span className="font-medium text-green-600">{product.total_income.toLocaleString()}đ</span>
+                        </div>
+
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Thời gian nuôi:</span>
+                          <span className="font-medium text-blue-600">{product.adoption_duration} tháng</span>
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={() => router.push(`/products/${product.id}`)}
+                        variant="outline"
+                        size="sm"
+                        className="w-full mt-3 text-emerald-600 border-emerald-600 hover:bg-emerald-50"
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        Xem chi tiết
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+
+          {!isLoading && !error && filteredProducts.length === 0 && (
             <div className="text-center py-12">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <TrendingUp className="w-8 h-8 text-gray-400" />
               </div>
-              <p className="text-gray-500">Chưa có đơn nhận nuôi nào</p>
-              <p className="text-sm text-gray-400">Bắt đầu đầu tư để nhận nuôi gia súc</p>
+              <p className="text-gray-500">Không có sản phẩm nào</p>
+              <p className="text-sm text-gray-400">Thử thay đổi bộ lọc để xem thêm sản phẩm</p>
             </div>
           )}
         </div>

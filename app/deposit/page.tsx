@@ -25,13 +25,12 @@ export default function DepositPage() {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
     setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
   }
 
   return (
     <div className="min-h-screen relative overflow-hidden max-w-md mx-auto bg-white">
       <div className="relative z-10">
-        <StatusBar />
+        
 
         <div className="px-4 md:px-6 pb-24">
           {/* Header */}

@@ -9,7 +9,7 @@ import { ArrowLeft, Diamond, Gift } from "lucide-react"
 export default function RewardCenter() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-600 via-emerald-500 to-teal-400">
-      <StatusBar />
+      
 
       <div className="px-4 sm:px-6 lg:px-8 pb-24 max-w-4xl mx-auto">
         {/* Header */}

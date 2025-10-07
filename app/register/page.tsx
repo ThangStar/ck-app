@@ -9,14 +9,13 @@ import { registerUser, clearError } from "@/lib/authSlice"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Eye, EyeOff, Mail, Lock, User, Phone, Loader2 } from "lucide-react"
+import { Eye, EyeOff, Lock, User, Loader2 } from "lucide-react"
 import Link from "next/link"
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
+    username: "",
+    full_name: "",
     password: "",
     confirmPassword: "",
   })
@@ -31,20 +30,14 @@ export default function RegisterPage() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
-    if (!formData.name.trim()) {
-      newErrors.name = "Vui lòng nhập họ tên"
+    if (!formData.username.trim()) {
+      newErrors.username = "Vui lòng nhập tài khoản"
+    } else if (formData.username.length < 3) {
+      newErrors.username = "Tài khoản phải có ít nhất 3 ký tự"
     }
 
-    if (!formData.email.trim()) {
-      newErrors.email = "Vui lòng nhập email"
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email không hợp lệ"
-    }
-
-    if (!formData.phone.trim()) {
-      newErrors.phone = "Vui lòng nhập số điện thoại"
-    } else if (!/^[0-9]{10,11}$/.test(formData.phone.replace(/\s/g, ""))) {
-      newErrors.phone = "Số điện thoại không hợp lệ"
+    if (!formData.full_name.trim()) {
+      newErrors.full_name = "Vui lòng nhập họ tên"
     }
 
     if (!formData.password) {
@@ -73,15 +66,14 @@ export default function RegisterPage() {
     try {
       const result = await dispatch(
         registerUser({
-          email: formData.email,
+          username: formData.username,
           password: formData.password,
-          name: formData.name,
-          phone: formData.phone,
+          full_name: formData.full_name,
         }),
       )
 
       if (registerUser.fulfilled.match(result)) {
-        router.push("/")
+        router.push("/home")
       }
     } catch (error) {
       console.error("Registration failed:", error)
@@ -121,7 +113,26 @@ export default function RegisterPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Name Input */}
+              {/* Username Input */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Tài khoản</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Input
+                    type="text"
+                    placeholder="Nhập tài khoản"
+                    value={formData.username}
+                    onChange={(e) => handleInputChange("username", e.target.value)}
+                    className={`pl-10 h-12 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 ${
+                      errors.username ? "border-red-500" : ""
+                    }`}
+                    required
+                  />
+                </div>
+                {errors.username && <p className="text-red-500 text-sm">{errors.username}</p>}
+              </div>
+
+              {/* Full Name Input */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">Họ và tên</label>
                 <div className="relative">
@@ -129,53 +140,15 @@ export default function RegisterPage() {
                   <Input
                     type="text"
                     placeholder="Nhập họ và tên"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    value={formData.full_name}
+                    onChange={(e) => handleInputChange("full_name", e.target.value)}
                     className={`pl-10 h-12 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 ${
-                      errors.name ? "border-red-500" : ""
+                      errors.full_name ? "border-red-500" : ""
                     }`}
                     required
                   />
                 </div>
-                {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
-              </div>
-
-              {/* Email Input */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Email</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <Input
-                    type="email"
-                    placeholder="Nhập email của bạn"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    className={`pl-10 h-12 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 ${
-                      errors.email ? "border-red-500" : ""
-                    }`}
-                    required
-                  />
-                </div>
-                {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
-              </div>
-
-              {/* Phone Input */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Số điện thoại</label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <Input
-                    type="tel"
-                    placeholder="Nhập số điện thoại"
-                    value={formData.phone}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
-                    className={`pl-10 h-12 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 ${
-                      errors.phone ? "border-red-500" : ""
-                    }`}
-                    required
-                  />
-                </div>
-                {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
+                {errors.full_name && <p className="text-red-500 text-sm">{errors.full_name}</p>}
               </div>
 
               {/* Password Input */}

@@ -13,7 +13,7 @@ import { Eye, EyeOff, Mail, Lock, Loader2 } from "lucide-react"
 import Link from "next/link"
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
@@ -23,14 +23,14 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!email || !password) {
+    if (!username || !password) {
       return
     }
 
     try {
-      const result = await dispatch(loginUser({ email, password }))
+      const result = await dispatch(loginUser({ username, password }))
       if (loginUser.fulfilled.match(result)) {
-        router.push("/home")
+        window.location.href = "/home"
       }
     } catch (error) {
       console.error("Login failed:", error)
@@ -62,24 +62,23 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Username/Email Input */}
+              {/* Username Input */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Tài khoản hoặc Email</label>
+                <label className="text-sm font-medium text-gray-700">Tài khoản</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <Input
                     type="text"
-                    placeholder="Nhập tài khoản hoặc email của bạn"
-                    value={email}
+                    placeholder="Nhập tài khoản của bạn"
+                    value={username}
                     onChange={(e) => {
-                      setEmail(e.target.value)
+                      setUsername(e.target.value)
                       handleInputChange()
                     }}
                     className="pl-10 h-12 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
                     required
                   />
                 </div>
-                <p className="text-xs text-gray-500">Bạn có thể sử dụng tài khoản hoặc email để đăng nhập</p>
               </div>
 
               {/* Password Input */}
@@ -123,7 +122,7 @@ export default function LoginPage() {
               {/* Login Button */}
               <Button
                 type="submit"
-                disabled={isLoading || !email || !password}
+                disabled={isLoading || !username || !password}
                 className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-lg"
               >
                 {isLoading ? (

@@ -1,3 +1,5 @@
+"use client"
+
 import { StatusBar } from "@/components/status-bar"
 import { RanchDashboard } from "@/components/ranch-dashboard"
 import { BottomNavigation } from "@/components/bottom-navigation"
@@ -16,7 +18,6 @@ export default function HomePage() {
         </div>
 
         <div className="relative z-10">
-          <StatusBar />
           <RanchDashboard />
           <BottomNavigation />
         </div>

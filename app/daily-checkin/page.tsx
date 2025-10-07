@@ -4,23 +4,90 @@ import { StatusBar } from "@/components/status-bar"
 import { BottomNavigation } from "@/components/bottom-navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { ArrowLeft, Calendar, CheckCircle } from "lucide-react"
-import { useState } from "react"
+import { ArrowLeft, Calendar, CheckCircle, Loader2 } from "lucide-react"
+import { useEffect } from "react"
+import { useAppDispatch, useAppSelector } from "@/lib/hooks"
+import { 
+  dailyCheckIn, 
+  getTodayCheckIn, 
+  getCheckInStreak, 
+  getCheckInHistory,
+  clearError 
+} from "@/lib/checkinSlice"
+import ClientOnly from "@/components/client-only"
 
 export default function DailyCheckin() {
-  const [checkedDays, setCheckedDays] = useState([1, 2, 3])
-  const [todayChecked, setTodayChecked] = useState(false)
+  const dispatch = useAppDispatch()
+  const { 
+    todayStatus, 
+    streak, 
+    history, 
+    isLoading, 
+    error 
+  } = useAppSelector((state) => state.checkin)
 
-  const handleCheckin = () => {
-    setTodayChecked(true)
-    setCheckedDays([...checkedDays, 4])
+  useEffect(() => {
+    // Load today's status and streak on component mount
+    dispatch(getTodayCheckIn())
+    dispatch(getCheckInStreak())
+    dispatch(getCheckInHistory())
+  }, [dispatch])
+
+  const handleCheckin = async () => {
+    try {
+      await dispatch(dailyCheckIn()).unwrap()
+      // Refresh data after successful check-in
+      dispatch(getTodayCheckIn())
+      dispatch(getCheckInStreak())
+    } catch (error) {
+      console.error("Check-in failed:", error)
+    }
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-600 via-emerald-500 to-teal-400">
-      <StatusBar />
+  // Calculate checked days for this week
+  const getCheckedDaysThisWeek = () => {
+    if (!history || history.length === 0) return []
+    
+    const today = new Date()
+    const startOfWeek = new Date(today)
+    startOfWeek.setDate(today.getDate() - today.getDay() + 1) // Monday
+    
+    const checkedDays = []
+    for (let i = 0; i < 7; i++) {
+      const checkDate = new Date(startOfWeek)
+      checkDate.setDate(startOfWeek.getDate() + i)
+      
+      const hasCheckedIn = history.some(record => {
+        const recordDate = new Date(record.checkin_date)
+        return recordDate.toDateString() === checkDate.toDateString()
+      })
+      
+      if (hasCheckedIn) {
+        checkedDays.push(i + 1)
+      }
+    }
+    
+    return checkedDays
+  }
 
-      <div className="px-4 sm:px-6 lg:px-8 pb-24 max-w-4xl mx-auto">
+  const checkedDays = getCheckedDaysThisWeek()
+  const todayChecked = todayStatus?.has_checked_in || false
+
+  return (
+    <ClientOnly
+      fallback={
+        <div className="min-h-screen bg-gradient-to-b from-emerald-600 via-emerald-500 to-teal-400 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-white font-medium">Đang tải...</p>
+          </div>
+        </div>
+      }
+    >
+      <div className="min-h-screen bg-gradient-to-b from-emerald-600 via-emerald-500 to-teal-400">
+        <StatusBar />
+
+        <div className="px-4 sm:px-6 lg:px-8 pb-24 max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6 pt-4">
           <Button variant="ghost" size="sm" className="text-white p-2" onClick={() => window.history.back()}>
@@ -29,13 +96,38 @@ export default function DailyCheckin() {
           <h1 className="text-white text-xl sm:text-2xl font-bold">Điểm Danh Hàng Ngày</h1>
         </div>
 
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm mb-4">
+            {error}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => dispatch(clearError())}
+              className="ml-2 text-red-600"
+            >
+              ✕
+            </Button>
+          </div>
+        )}
+
         {/* Current Streak */}
         <Card className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-6">
           <div className="text-center">
             <Calendar className="w-12 h-12 text-emerald-600 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-emerald-600 mb-2">Chuỗi điểm danh</h2>
-            <p className="text-3xl font-bold text-orange-500">{checkedDays.length} ngày</p>
+            <p className="text-3xl font-bold text-orange-500">
+              {streak?.streak_days || 0} ngày
+            </p>
             <p className="text-gray-600 mt-2">Điểm danh liên tục để nhận thưởng lớn!</p>
+            {streak && (
+              <div className="mt-4 grid grid-cols-1 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-500">Tổng điểm danh</p>
+                  <p className="font-bold text-blue-600">{streak.total_checkins} lần</p>
+                </div>
+              </div>
+            )}
           </div>
         </Card>
 
@@ -72,12 +164,30 @@ export default function DailyCheckin() {
           <div className="text-center">
             <h3 className="text-xl font-bold mb-2">Phần thưởng hôm nay</h3>
             <p className="text-3xl font-bold mb-4">15,000đ</p>
+            {todayChecked && todayStatus?.reward && (
+              <div className="text-sm mb-4 opacity-90">
+                <p>Đã điểm danh hôm nay!</p>
+                <p>Nhận được: {todayStatus.reward.amount.toLocaleString('vi-VN')}đ</p>
+                {todayStatus.reward.diamonds > 0 && (
+                  <p>Kim cương: {todayStatus.reward.diamonds}</p>
+                )}
+              </div>
+            )}
             <Button
               onClick={handleCheckin}
-              disabled={todayChecked}
-              className="bg-white text-orange-600 hover:bg-gray-100 font-bold px-8 py-3"
+              disabled={todayChecked || isLoading}
+              className="bg-white text-orange-600 hover:bg-gray-100 font-bold px-8 py-3 disabled:opacity-50"
             >
-              {todayChecked ? "Đã điểm danh" : "Điểm danh ngay"}
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Đang xử lý...
+                </>
+              ) : todayChecked ? (
+                "Đã điểm danh"
+              ) : (
+                "Điểm danh ngay"
+              )}
             </Button>
           </div>
         </Card>
@@ -91,20 +201,38 @@ export default function DailyCheckin() {
                 <p className="font-medium">Điểm danh 7 ngày liên tục</p>
                 <p className="text-sm text-gray-600">Nhận 100,000đ</p>
               </div>
-              <span className="text-emerald-600 font-bold">7/7</span>
+              <span className={`font-bold ${
+                (streak?.streak_days || 0) >= 7 ? 'text-emerald-600' : 'text-gray-400'
+              }`}>
+                {Math.min(streak?.streak_days || 0, 7)}/7
+              </span>
             </div>
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div>
                 <p className="font-medium">Điểm danh 30 ngày trong tháng</p>
                 <p className="text-sm text-gray-600">Nhận 500,000đ</p>
               </div>
-              <span className="text-orange-600 font-bold">4/30</span>
+              <span className={`font-bold ${
+                (streak?.total_checkins || 0) >= 30 ? 'text-orange-600' : 'text-gray-400'
+              }`}>
+                {Math.min(streak?.total_checkins || 0, 30)}/30
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div>
+                <p className="font-medium">Chuỗi điểm danh hiện tại</p>
+                <p className="text-sm text-gray-600">Đang duy trì</p>
+              </div>
+              <span className="text-blue-600 font-bold">
+                {streak?.streak_days || 0} ngày
+              </span>
             </div>
           </div>
         </Card>
-      </div>
+        </div>
 
-      <BottomNavigation />
-    </div>
+        <BottomNavigation />
+      </div>
+    </ClientOnly>
   )
 }

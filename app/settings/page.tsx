@@ -152,7 +152,7 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen relative overflow-hidden max-w-md mx-auto bg-white">
       <div className="relative z-10">
-        <StatusBar />
+        
 
         <div className="px-4 md:px-6 pb-24">
           <div className="flex items-center gap-4 mb-6 pt-4">
