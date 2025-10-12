@@ -31,7 +31,7 @@ const initialState: ProductState = {
 export const fetchProducts = createAsyncThunk(
   "products/fetchProducts",
   async ({ adoption_duration, egg_type }: { adoption_duration?: number; egg_type?: string } = {}) => {
-    let url = "http://localhost:5000/api/products"
+    let url = `${process.env.NEXT_PUBLIC_API_URL}/api/products`
     const params = new URLSearchParams()
     
     if (adoption_duration !== undefined) params.append("adoption_duration", adoption_duration.toString())
@@ -59,7 +59,7 @@ export const fetchProducts = createAsyncThunk(
 export const fetchProductById = createAsyncThunk(
   "products/fetchProductById",
   async (id: string) => {
-    const response = await fetch(`http://localhost:5000/api/products/${id}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products/${id}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     })
