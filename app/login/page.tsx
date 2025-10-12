@@ -21,6 +21,8 @@ export default function LoginPage() {
   const { isLoading, error } = useAppSelector((state) => state.auth)
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log(process.env.NEXT_PUBLIC_API_URL);
+    
     e.preventDefault()
 
     if (!username || !password) {

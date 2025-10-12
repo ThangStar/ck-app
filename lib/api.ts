@@ -2,7 +2,7 @@ class ApiClient {
   private baseURL: string
   private token: string | null = null
 
-  constructor(baseURL = "http://localhost:5000/api") {
+  constructor(baseURL = `${process.env.NEXT_PUBLIC_API_URL}/api`) {
     this.baseURL = baseURL
     // Get token from localStorage (client-side only)
     if (typeof window !== "undefined") {

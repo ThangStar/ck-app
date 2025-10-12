@@ -56,7 +56,7 @@ export const dailyCheckIn = createAsyncThunk(
       throw new Error("No authentication token")
     }
 
-    const response = await fetch("http://localhost:5000/api/checkin/daily", {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/checkin/daily`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -84,7 +84,7 @@ export const getCheckInHistory = createAsyncThunk(
       throw new Error("No authentication token")
     }
 
-    const response = await fetch("http://localhost:5000/api/checkin/history?page=1&limit=50", {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/checkin/history?page=1&limit=50`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -112,7 +112,7 @@ export const getTodayCheckIn = createAsyncThunk(
       throw new Error("No authentication token")
     }
 
-    const response = await fetch("http://localhost:5000/api/checkin/today", {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/checkin/today`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -140,7 +140,7 @@ export const getCheckInStreak = createAsyncThunk(
       throw new Error("No authentication token")
     }
 
-    const response = await fetch("http://localhost:5000/api/checkin/streak", {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/checkin/streak`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
